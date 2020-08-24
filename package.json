@@ -1,0 +1,41 @@
+{
+  "name": "eomi",
+  "version": "0.1.0",
+  "description": "한국어 용언(동사, 형용사) 활용을 편리하게 구현하는 라이브러리",
+  "main": "dist/index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dragonteros/Eomi.js.git"
+  },
+  "keywords": [
+    "korean",
+    "hangeul",
+    "hangul",
+    "conjugation",
+    "한국어",
+    "한글",
+    "용언",
+    "동사",
+    "형용사",
+    "활용"
+  ],
+  "author": "dragonteros",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dragonteros/Eomi.js/issues"
+  },
+  "homepage": "https://github.com/dragonteros/Eomi.js#readme",
+  "dependencies": {
+    "@types/node": "^14.6.0"
+  },
+  "devDependencies": {
+    "mocha": "^8.1.1"
+  }
+}
