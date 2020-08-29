@@ -1,10 +1,28 @@
 "use strict";
 /* Utilities */
+function assembleSyllable(x) {
+    var codepoint = x[0] * 588 + x[1] * 28 + x[2] + 0xac00;
+    return String.fromCharCode(codepoint);
+}
+function disassembleSyllable(x) {
+    var codepoint = x.charCodeAt(x.length - 1) - 0xac00;
+    var choseong = (codepoint / 588) | 0;
+    var jungseong = ((codepoint % 588) / 28) | 0;
+    var jongseong = codepoint % 28;
+    return [choseong, jungseong, jongseong];
+}
 var BATCHIM_TABLE = "ㄱㄲㄳㄴㄵㄶㄷㄹㄺㄻㄼㄽㄾㄿㅀㅁㅂㅄㅅㅆㅇㅈㅊㅋㅌㅍㅎ";
 function getBatchim(x) {
-    var codepoint = x.charCodeAt(x.length - 1);
-    var idx = (codepoint - 0xac00) % 28;
+    var idx = disassembleSyllable(x)[2];
     return idx === 0 ? "" : BATCHIM_TABLE[idx - 1];
+}
+function isPositiveMoeum(x) {
+    var moeum = disassembleSyllable(x)[1];
+    if (0 <= moeum && moeum <= 3)
+        return true; // ㅏ ㅐ ㅑ ㅒ
+    if (8 <= moeum && moeum <= 12)
+        return true; // ㅗ ㅘ ㅙ ㅚ ㅛ
+    return false;
 }
 function startsWithSyllable(x) {
     return "가" <= x[0] && x[0] <= "힣";
@@ -45,18 +63,17 @@ function concatHangeul(x, y) {
         if (newBatchim === 0)
             throw err;
     }
-    var mergedSyllable = x.charCodeAt(x.length - 1) - 0xac00;
-    mergedSyllable += -(mergedSyllable % 28) + newBatchim;
-    mergedSyllable += 0xac00;
-    return x.slice(0, -1) + String.fromCharCode(mergedSyllable) + y.slice(1);
+    var merged = disassembleSyllable(x);
+    merged[2] = newBatchim;
+    return x.slice(0, -1) + assembleSyllable(merged) + y.slice(1);
 }
 /* Main Classes */
 var Yongeon = /** @class */ (function () {
     function Yongeon(hada, hae, hani) {
         this.hada = hada.slice(0, -1);
-        this.hae = hae;
-        this.hani = hani.slice(0, -1);
         this.batchim = getBatchim(this.hada);
+        this.hae = hae || this.recoverHae();
+        this.hani = hani ? hani.slice(0, -1) : this.recoverHani();
         this.hamyeon = this.batchim === "ㄹ" ? this.hada : this.hani;
     }
     Yongeon.prototype._ = function (eomi, eomiAfterBatchim) {
@@ -69,6 +86,42 @@ var Yongeon = /** @class */ (function () {
                 eomi = eomiAfterBatchim;
         }
         return eomi.after(this);
+    };
+    Yongeon.prototype.recoverHae = function () {
+        if (!this.batchim) {
+            var jamos = disassembleSyllable(this.hada);
+            if (jamos[1] === 0 || jamos[1] === 4) {
+                return this.hada; // ㅏ, ㅓ
+            }
+            else if (jamos[1] === 18) {
+                jamos[1] = 4; // ㅡ -> ㅓ
+                return this.hada.slice(0, -1) + assembleSyllable(jamos);
+            }
+        }
+        return this.hada + (isPositiveMoeum(this.hada) ? "아" : "어");
+    };
+    Yongeon.prototype.recoverHani = function () {
+        var jamos = disassembleSyllable(this.hada);
+        if (this.batchim === "ㄹ") {
+            // ㄹ 탈락
+            jamos[2] = 0;
+            return this.hada.slice(0, -1) + assembleSyllable(jamos);
+        }
+        var haeLast = this.hae.slice(-1);
+        if ("아어".indexOf(haeLast) !== -1) {
+            // 받침 있는 규칙 | ㄷ ㅅ 불규칙
+            return this.hae.slice(0, -1) + (this.batchim && "으");
+        }
+        else if ("와워".indexOf(haeLast) !== -1) {
+            // ㅂ 불규칙
+            return this.hae.slice(0, -1) + "우";
+        }
+        else if (this.batchim === "ㅎ") {
+            // ㅎ 불규칙
+            jamos[2] = 0;
+            return this.hada.slice(0, -1) + assembleSyllable(jamos);
+        }
+        return this.hada; // 받침 없는 규칙 | 르, 러, 우, 여 불규칙
     };
     Yongeon.prototype.valueOf = function () {
         return this.hada + "다";

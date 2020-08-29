@@ -1,11 +1,29 @@
 /* Utilities */
 
-const BATCHIM_TABLE = "ㄱㄲㄳㄴㄵㄶㄷㄹㄺㄻㄼㄽㄾㄿㅀㅁㅂㅄㅅㅆㅇㅈㅊㅋㅌㅍㅎ";
+function assembleSyllable(x: number[]): string {
+  const codepoint = x[0] * 588 + x[1] * 28 + x[2] + 0xac00;
+  return String.fromCharCode(codepoint);
+}
 
+function disassembleSyllable(x: string): number[] {
+  const codepoint = x.charCodeAt(x.length - 1) - 0xac00;
+  const choseong = (codepoint / 588) | 0;
+  const jungseong = ((codepoint % 588) / 28) | 0;
+  const jongseong = codepoint % 28;
+  return [choseong, jungseong, jongseong];
+}
+
+const BATCHIM_TABLE = "ㄱㄲㄳㄴㄵㄶㄷㄹㄺㄻㄼㄽㄾㄿㅀㅁㅂㅄㅅㅆㅇㅈㅊㅋㅌㅍㅎ";
 function getBatchim(x: string): string {
-  const codepoint = x.charCodeAt(x.length - 1);
-  const idx = (codepoint - 0xac00) % 28;
+  const idx = disassembleSyllable(x)[2];
   return idx === 0 ? "" : BATCHIM_TABLE[idx - 1];
+}
+
+function isPositiveMoeum(x: string): boolean {
+  const moeum = disassembleSyllable(x)[1];
+  if (0 <= moeum && moeum <= 3) return true; // ㅏ ㅐ ㅑ ㅒ
+  if (8 <= moeum && moeum <= 12) return true; // ㅗ ㅘ ㅙ ㅚ ㅛ
+  return false;
 }
 
 function startsWithSyllable(x: string): boolean {
@@ -46,10 +64,9 @@ function concatHangeul(x: string, y: string): string {
     if (newBatchim === 0) throw err;
   }
 
-  let mergedSyllable = x.charCodeAt(x.length - 1) - 0xac00;
-  mergedSyllable += -(mergedSyllable % 28) + newBatchim;
-  mergedSyllable += 0xac00;
-  return x.slice(0, -1) + String.fromCharCode(mergedSyllable) + y.slice(1);
+  let merged: number[] = disassembleSyllable(x);
+  merged[2] = newBatchim;
+  return x.slice(0, -1) + assembleSyllable(merged) + y.slice(1);
 }
 
 /* Main Classes */
@@ -61,12 +78,12 @@ class Yongeon {
   hamyeon: string;
   batchim: string;
 
-  constructor(hada: string, hae: string, hani: string) {
+  constructor(hada: string, hae?: string, hani?: string) {
     this.hada = hada.slice(0, -1);
-    this.hae = hae;
-    this.hani = hani.slice(0, -1);
-
     this.batchim = getBatchim(this.hada);
+
+    this.hae = hae || this.recoverHae();
+    this.hani = hani ? hani.slice(0, -1) : this.recoverHani();
     this.hamyeon = this.batchim === "ㄹ" ? this.hada : this.hani;
   }
 
@@ -78,6 +95,42 @@ class Yongeon {
       if (this.batchim !== "ㄹ" || !eomi.dropRieul) eomi = eomiAfterBatchim;
     }
     return eomi.after(this);
+  }
+
+  recoverHae(): string {
+    if (!this.batchim) {
+      let jamos = disassembleSyllable(this.hada);
+      if (jamos[1] === 0 || jamos[1] === 4) {
+        return this.hada; // ㅏ, ㅓ
+      } else if (jamos[1] === 18) {
+        jamos[1] = 4; // ㅡ -> ㅓ
+        return this.hada.slice(0, -1) + assembleSyllable(jamos);
+      }
+    }
+    return this.hada + (isPositiveMoeum(this.hada) ? "아" : "어");
+  }
+
+  recoverHani(): string {
+    let jamos = disassembleSyllable(this.hada);
+    if (this.batchim === "ㄹ") {
+      // ㄹ 탈락
+      jamos[2] = 0;
+      return this.hada.slice(0, -1) + assembleSyllable(jamos);
+    }
+
+    const haeLast = this.hae.slice(-1);
+    if ("아어".indexOf(haeLast) !== -1) {
+      // 받침 있는 규칙 | ㄷ ㅅ 불규칙
+      return this.hae.slice(0, -1) + (this.batchim && "으");
+    } else if ("와워".indexOf(haeLast) !== -1) {
+      // ㅂ 불규칙
+      return this.hae.slice(0, -1) + "우";
+    } else if (this.batchim === "ㅎ") {
+      // ㅎ 불규칙
+      jamos[2] = 0;
+      return this.hada.slice(0, -1) + assembleSyllable(jamos);
+    }
+    return this.hada; // 받침 없는 규칙 | 르, 러, 우, 여 불규칙
   }
 
   valueOf(): string {
