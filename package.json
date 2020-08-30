@@ -1,8 +1,8 @@
 {
-  "name": "eomi",
+  "name": "eomi-js",
   "version": "0.1.0",
   "description": "한국어 용언(동사, 형용사) 활용을 편리하게 구현하는 라이브러리",
-  "main": "dist/index.js",
+  "main": "./dist/index.js",
   "directories": {
     "test": "test"
   },
@@ -32,10 +32,8 @@
     "url": "https://github.com/dragonteros/Eomi.js/issues"
   },
   "homepage": "https://github.com/dragonteros/Eomi.js#readme",
-  "dependencies": {
-    "@types/node": "^14.6.0"
-  },
   "devDependencies": {
+    "@types/node": "^14.6.0",
     "mocha": "^8.1.1"
   }
 }

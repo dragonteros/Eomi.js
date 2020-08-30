@@ -1,9 +1,19 @@
 "use strict";
 /* Utilities */
+/**
+ * 초성, 중성, 종성에 해당하는 인덱스로 한글 음절을 조합한다.
+ * @param x 초성 (0-18), 중성 (0-20), 종성 (0-27)으로 이루어진 정수 배열
+ * @returns 조합된 한글 음절
+ */
 function assembleSyllable(x) {
     var codepoint = x[0] * 588 + x[1] * 28 + x[2] + 0xac00;
     return String.fromCharCode(codepoint);
 }
+/**
+ * 문자열의 마지막 음절을 초성, 중성, 종성에 해당하는 인덱스로 분해한다.
+ * @param x 분해하고자 하는 한글 음절로 끝나는 문자열.
+ * @returns 초성 (0-18), 중성 (0-20), 종성 (0-27)으로 이루어진 정수 배열.
+ */
 function disassembleSyllable(x) {
     var codepoint = x.charCodeAt(x.length - 1) - 0xac00;
     var choseong = (codepoint / 588) | 0;
@@ -16,18 +26,15 @@ function getBatchim(x) {
     var idx = disassembleSyllable(x)[2];
     return idx === 0 ? "" : BATCHIM_TABLE[idx - 1];
 }
-function isPositiveMoeum(x) {
-    var moeum = disassembleSyllable(x)[1];
-    if (0 <= moeum && moeum <= 3)
-        return true; // ㅏ ㅐ ㅑ ㅒ
-    if (8 <= moeum && moeum <= 12)
-        return true; // ㅗ ㅘ ㅙ ㅚ ㅛ
-    return false;
-}
 function startsWithSyllable(x) {
     return "가" <= x[0] && x[0] <= "힣";
 }
-// joins two possibly non-syllabic Hangeul strings
+/**
+ * 두 한글 문자열을 결합한다.
+ * @param x 결합할 앞 문자열.
+ * @param y 결합할 뒤 문자열. 한글 음절로 시작하지 않을 수 있다.
+ * @returns 결합된 문자열.
+ */
 function concatHangeul(x, y) {
     var err = new Error("Cannot concatenate '" + x + "' and '" + y + "'");
     if (!x || !y || startsWithSyllable(y))
@@ -77,19 +84,15 @@ var Yongeon = /** @class */ (function () {
         this.hamyeon = this.batchim === "ㄹ" ? this.hada : this.hani;
     }
     Yongeon.prototype._ = function (eomi, eomiAfterBatchim) {
-        if (typeof eomi === "string")
-            eomi = new Eomi(eomi);
-        if (eomiAfterBatchim != null && this.batchim) {
-            if (typeof eomiAfterBatchim === "string")
-                eomiAfterBatchim = new Eomi(eomiAfterBatchim);
-            if (this.batchim !== "ㄹ" || !eomi.dropRieul)
-                eomi = eomiAfterBatchim;
-        }
+        if (!(eomi instanceof Eomi))
+            eomi = new Eomi(eomi, eomiAfterBatchim);
+        else if (eomiAfterBatchim != null)
+            throw Error("If the first argument is a proper Eomi, only one argument should be given.");
         return eomi.after(this);
     };
     Yongeon.prototype.recoverHae = function () {
+        var jamos = disassembleSyllable(this.hada);
         if (!this.batchim) {
-            var jamos = disassembleSyllable(this.hada);
             if (jamos[1] === 0 || jamos[1] === 4) {
                 return this.hada; // ㅏ, ㅓ
             }
@@ -98,7 +101,7 @@ var Yongeon = /** @class */ (function () {
                 return this.hada.slice(0, -1) + assembleSyllable(jamos);
             }
         }
-        return this.hada + (isPositiveMoeum(this.hada) ? "아" : "어");
+        return this.hada + (jamos[1] === 0 || jamos[1] === 8 ? "아" : "어"); // ㅏ, ㅗ
     };
     Yongeon.prototype.recoverHani = function () {
         var jamos = disassembleSyllable(this.hada);
@@ -128,9 +131,9 @@ var Yongeon = /** @class */ (function () {
     };
     return Yongeon;
 }());
-var Eomi = /** @class */ (function () {
-    function Eomi(eomi) {
-        var err = new Error("Cannot parse given string " + eomi + " to Eomi");
+var EomiUnit = /** @class */ (function () {
+    function EomiUnit(eomi) {
+        var err = new Error("Cannot parse given string " + eomi + " to EomiUnit");
         if (eomi[0] === "-")
             eomi = eomi.slice(1);
         var infTest = eomi.match(/^[(]?([아-앟어-엏])(?:[/]([아-앟어-엏]))?[)]?(.*)$/);
@@ -164,7 +167,7 @@ var Eomi = /** @class */ (function () {
             this.dropRieul = "ㄴㄹㅂ".indexOf(this.body[0]) !== -1;
         }
     }
-    Eomi.prototype.after = function (yongeon) {
+    EomiUnit.prototype.after = function (yongeon) {
         var stem = yongeon.hada;
         if (this.eomiType === "(\uC544/\uC5B4)" /* A_EO */) {
             stem = yongeon.hae;
@@ -177,8 +180,31 @@ var Eomi = /** @class */ (function () {
         }
         return concatHangeul(stem, this.body);
     };
-    Eomi.prototype.valueOf = function () {
+    EomiUnit.prototype.valueOf = function () {
         return "-" + this.eomiType + this.body;
+    };
+    return EomiUnit;
+}());
+var Eomi = /** @class */ (function () {
+    function Eomi(eomi, eomiAfterBatchim) {
+        if (typeof eomi === "string")
+            eomi = new EomiUnit(eomi);
+        if (typeof eomiAfterBatchim === "string")
+            eomiAfterBatchim = new EomiUnit(eomiAfterBatchim);
+        this.eomi = eomi;
+        this.eomiAfterBatchim = eomiAfterBatchim;
+    }
+    Eomi.prototype.after = function (yongeon) {
+        var eomi = this.eomi;
+        if (this.eomiAfterBatchim != null && yongeon.batchim) {
+            if (yongeon.batchim !== "ㄹ" || !eomi.dropRieul)
+                eomi = this.eomiAfterBatchim;
+        }
+        return eomi.after(yongeon);
+    };
+    Eomi.prototype.valueOf = function () {
+        var after = this.eomiAfterBatchim;
+        return this.eomi + (after != null ? "/" + after : "");
     };
     return Eomi;
 }());

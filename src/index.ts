@@ -1,10 +1,20 @@
 /* Utilities */
 
+/**
+ * 초성, 중성, 종성에 해당하는 인덱스로 한글 음절을 조합한다.
+ * @param x 초성 (0-18), 중성 (0-20), 종성 (0-27)으로 이루어진 정수 배열
+ * @returns 조합된 한글 음절
+ */
 function assembleSyllable(x: number[]): string {
   const codepoint = x[0] * 588 + x[1] * 28 + x[2] + 0xac00;
   return String.fromCharCode(codepoint);
 }
 
+/**
+ * 문자열의 마지막 음절을 초성, 중성, 종성에 해당하는 인덱스로 분해한다.
+ * @param x 분해하고자 하는 한글 음절로 끝나는 문자열.
+ * @returns 초성 (0-18), 중성 (0-20), 종성 (0-27)으로 이루어진 정수 배열.
+ */
 function disassembleSyllable(x: string): number[] {
   const codepoint = x.charCodeAt(x.length - 1) - 0xac00;
   const choseong = (codepoint / 588) | 0;
@@ -19,18 +29,16 @@ function getBatchim(x: string): string {
   return idx === 0 ? "" : BATCHIM_TABLE[idx - 1];
 }
 
-function isPositiveMoeum(x: string): boolean {
-  const moeum = disassembleSyllable(x)[1];
-  if (0 <= moeum && moeum <= 3) return true; // ㅏ ㅐ ㅑ ㅒ
-  if (8 <= moeum && moeum <= 12) return true; // ㅗ ㅘ ㅙ ㅚ ㅛ
-  return false;
-}
-
 function startsWithSyllable(x: string): boolean {
   return "가" <= x[0] && x[0] <= "힣";
 }
 
-// joins two possibly non-syllabic Hangeul strings
+/**
+ * 두 한글 문자열을 결합한다.
+ * @param x 결합할 앞 문자열.
+ * @param y 결합할 뒤 문자열. 한글 음절로 시작하지 않을 수 있다.
+ * @returns 결합된 문자열.
+ */
 function concatHangeul(x: string, y: string): string {
   const err = new Error(`Cannot concatenate '${x}' and '${y}'`);
   if (!x || !y || startsWithSyllable(y)) return x + y;
@@ -87,19 +95,19 @@ class Yongeon {
     this.hamyeon = this.batchim === "ㄹ" ? this.hada : this.hani;
   }
 
-  _(eomi: Eomi | string, eomiAfterBatchim?: Eomi | string): string {
-    if (typeof eomi === "string") eomi = new Eomi(eomi);
-    if (eomiAfterBatchim != null && this.batchim) {
-      if (typeof eomiAfterBatchim === "string")
-        eomiAfterBatchim = new Eomi(eomiAfterBatchim);
-      if (this.batchim !== "ㄹ" || !eomi.dropRieul) eomi = eomiAfterBatchim;
-    }
+  _(eomi: Eomi | string, eomiAfterBatchim?: string): string {
+    if (!(eomi instanceof Eomi)) eomi = new Eomi(eomi, eomiAfterBatchim);
+    else if (eomiAfterBatchim != null)
+      throw Error(
+        "If the first argument is a proper Eomi, only one argument should be given."
+      );
+
     return eomi.after(this);
   }
 
   recoverHae(): string {
+    let jamos = disassembleSyllable(this.hada);
     if (!this.batchim) {
-      let jamos = disassembleSyllable(this.hada);
       if (jamos[1] === 0 || jamos[1] === 4) {
         return this.hada; // ㅏ, ㅓ
       } else if (jamos[1] === 18) {
@@ -107,7 +115,7 @@ class Yongeon {
         return this.hada.slice(0, -1) + assembleSyllable(jamos);
       }
     }
-    return this.hada + (isPositiveMoeum(this.hada) ? "아" : "어");
+    return this.hada + (jamos[1] === 0 || jamos[1] === 8 ? "아" : "어"); // ㅏ, ㅗ
   }
 
   recoverHani(): string {
@@ -144,13 +152,13 @@ const enum EomiType {
   EU = "(으)",
 }
 
-class Eomi {
+class EomiUnit {
   eomiType: EomiType;
   body: string;
   dropRieul: boolean;
 
   constructor(eomi: string) {
-    const err = new Error(`Cannot parse given string ${eomi} to Eomi`);
+    const err = new Error(`Cannot parse given string ${eomi} to EomiUnit`);
     if (eomi[0] === "-") eomi = eomi.slice(1);
 
     const infTest = eomi.match(
@@ -198,6 +206,32 @@ class Eomi {
 
   valueOf(): string {
     return "-" + this.eomiType + this.body;
+  }
+}
+
+class Eomi {
+  eomi: EomiUnit;
+  eomiAfterBatchim?: EomiUnit;
+  constructor(eomi: EomiUnit | string, eomiAfterBatchim?: EomiUnit | string) {
+    if (typeof eomi === "string") eomi = new EomiUnit(eomi);
+    if (typeof eomiAfterBatchim === "string")
+      eomiAfterBatchim = new EomiUnit(eomiAfterBatchim);
+    this.eomi = eomi;
+    this.eomiAfterBatchim = eomiAfterBatchim;
+  }
+
+  after(yongeon: Yongeon): string {
+    let eomi = this.eomi;
+    if (this.eomiAfterBatchim != null && yongeon.batchim) {
+      if (yongeon.batchim !== "ㄹ" || !eomi.dropRieul)
+        eomi = this.eomiAfterBatchim;
+    }
+    return eomi.after(yongeon);
+  }
+
+  valueOf(): string {
+    const after = this.eomiAfterBatchim;
+    return this.eomi + (after != null ? "/" + after : "");
   }
 }
 

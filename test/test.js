@@ -3,6 +3,48 @@ var EOMI = require("../dist/index");
 var V = EOMI.V;
 var E = EOMI.E;
 
+describe("예제", function () {
+  it("README.md", function () {
+    const colors = [
+      new V("푸르다", "푸르러", "푸르니"),
+      new V("붉다", "붉어" /* 세번째 인수는 생략 가능 */),
+      new V("노랗다", "노래"),
+      new V("하얗다", "하얘"),
+      new V("검다" /* 두번째 인수도 생략 가능 */),
+    ];
+    const polite = [
+      new E("-ㅂ니다", "-습니다"), // 차례로 받침이 없을 때, 받침이 있을 때
+      new E("-(으)ㅂ시다"), // 두 경우를 모두 포괄
+      new E("-어요"),
+    ];
+    const intimate = [new E("ㄴ다", "는다"), new E("자"), new E("(아/어)")];
+
+    assert.deepEqual(
+      polite.map((e) => new V("뵙다", "뵈어", "뵈니")._(e)),
+      ["뵙습니다", "뵙시다", "뵈어요"]
+    );
+    assert.deepEqual(
+      intimate.map((e) => new V("보다")._(e)),
+      ["본다", "보자", "보아"]
+    );
+    assert.equal(
+      `${colors[0]._("-었던")} 하늘이 어느새 ${colors[1]._(
+        "-ㅂ니다",
+        "-습니다"
+      )}.`,
+      "푸르렀던 하늘이 어느새 붉습니다."
+    );
+    assert.equal(
+      `${colors[2]._(new E("고"))} ${colors[3]._(
+        new E("-ㄴ")
+      )} 꽃들이 장관을 이루던 언덕도 ${colors[4]._(
+        new E("-은")
+      )} 그림자가 드리웁니다.`,
+      "노랗고 하얀 꽃들이 장관을 이루던 언덕도 검은 그림자가 드리웁니다."
+    );
+  });
+});
+
 describe("받침 없는 규칙 활용", function () {
   var verbs = [
     new V("가다"),
@@ -111,7 +153,6 @@ describe("받침 없는 규칙 활용", function () {
       "-을",
       "-ㅁ",
       "(으)ㄹ는지",
-      "ㅂ니다",
       "을까",
       "-(으)니",
       "-으셨다",
@@ -119,126 +160,69 @@ describe("받침 없는 규칙 활용", function () {
       "으면",
     ];
     var answers = [
-      [
-        "간",
-        "갈",
-        "감",
-        "갈는지",
-        "갑니다",
-        "갈까",
-        "가니",
-        "가셨다",
-        "가세요",
-        "가면",
-      ],
+      ["간", "갈", "감", "갈는지", "갈까", "가니", "가셨다", "가세요", "가면"],
       [
         "얽맨",
         "얽맬",
         "얽맴",
         "얽맬는지",
-        "얽맵니다",
         "얽맬까",
         "얽매니",
         "얽매셨다",
         "얽매세요",
         "얽매면",
       ],
-      [
-        "선",
-        "설",
-        "섬",
-        "설는지",
-        "섭니다",
-        "설까",
-        "서니",
-        "서셨다",
-        "서세요",
-        "서면",
-      ],
+      ["선", "설", "섬", "설는지", "설까", "서니", "서셨다", "서세요", "서면"],
       [
         "둘러멘",
         "둘러멜",
         "둘러멤",
         "둘러멜는지",
-        "둘러멥니다",
         "둘러멜까",
         "둘러메니",
         "둘러메셨다",
         "둘러메세요",
         "둘러메면",
       ],
-      [
-        "쏜",
-        "쏠",
-        "쏨",
-        "쏠는지",
-        "쏩니다",
-        "쏠까",
-        "쏘니",
-        "쏘셨다",
-        "쏘세요",
-        "쏘면",
-      ],
-      [
-        "된",
-        "될",
-        "됨",
-        "될는지",
-        "됩니다",
-        "될까",
-        "되니",
-        "되셨다",
-        "되세요",
-        "되면",
-      ],
-      [
-        "준",
-        "줄",
-        "줌",
-        "줄는지",
-        "줍니다",
-        "줄까",
-        "주니",
-        "주셨다",
-        "주세요",
-        "주면",
-      ],
-      [
-        "꿴",
-        "꿸",
-        "뀀",
-        "꿸는지",
-        "뀁니다",
-        "꿸까",
-        "꿰니",
-        "꿰셨다",
-        "꿰세요",
-        "꿰면",
-      ],
+      ["쏜", "쏠", "쏨", "쏠는지", "쏠까", "쏘니", "쏘셨다", "쏘세요", "쏘면"],
+      ["된", "될", "됨", "될는지", "될까", "되니", "되셨다", "되세요", "되면"],
+      ["준", "줄", "줌", "줄는지", "줄까", "주니", "주셨다", "주세요", "주면"],
+      ["꿴", "꿸", "뀀", "꿸는지", "꿸까", "꿰니", "꿰셨다", "꿰세요", "꿰면"],
       [
         "틀어쥔",
         "틀어쥘",
         "틀어쥠",
         "틀어쥘는지",
-        "틀어쥡니다",
         "틀어쥘까",
         "틀어쥐니",
         "틀어쥐셨다",
         "틀어쥐세요",
         "틀어쥐면",
       ],
-      [
-        "친",
-        "칠",
-        "침",
-        "칠는지",
-        "칩니다",
-        "칠까",
-        "치니",
-        "치셨다",
-        "치세요",
-        "치면",
-      ],
+      ["친", "칠", "침", "칠는지", "칠까", "치니", "치셨다", "치세요", "치면"],
+    ];
+    answers.forEach((arr, i) =>
+      arr.forEach((answer, j) => assert.equal(verbs[i]._(endings[j]), answer))
+    );
+  });
+
+  it("음운 조건에 따라 달라지는 어미", function () {
+    var endings = [
+      new E("ㅂ니다", "습니다"),
+      new E("으옵니다", "-사옵니다"),
+      new E("-(으)오", "-소"),
+    ];
+    var answers = [
+      ["갑니다", "가옵니다", "가오"],
+      ["얽맵니다", "얽매옵니다", "얽매오"],
+      ["섭니다", "서옵니다", "서오"],
+      ["둘러멥니다", "둘러메옵니다", "둘러메오"],
+      ["쏩니다", "쏘옵니다", "쏘오"],
+      ["됩니다", "되옵니다", "되오"],
+      ["줍니다", "주옵니다", "주오"],
+      ["뀁니다", "꿰옵니다", "꿰오"],
+      ["틀어쥡니다", "틀어쥐옵니다", "틀어쥐오"],
+      ["칩니다", "치옵니다", "치오"],
     ];
     answers.forEach((arr, i) =>
       arr.forEach((answer, j) => assert.equal(verbs[i]._(endings[j]), answer))
@@ -248,9 +232,9 @@ describe("받침 없는 규칙 활용", function () {
 
 describe("받침 있는 규칙 활용", function () {
   var verbs = [
-    new V("앉다", "앉아", "앉으니"),
+    new V("앉다", "앉아"),
     new V("밟다"),
-    new V("맺다", "맺어", "맺으니"),
+    new V("맺다"),
     new V("뒤섞다", "뒤섞어"),
     new V("벗다", "벗어", "벗으니"),
     new V("옮다"),
@@ -420,6 +404,28 @@ describe("받침 있는 규칙 활용", function () {
       arr.forEach((answer, j) => assert.equal(verbs[i]._(endings[j]), answer))
     );
   });
+  it("음운 조건에 따라 달라지는 어미", function () {
+    var endings = [
+      new E("ㅂ니다", "습니다"),
+      new E("으옵니다", "-사옵니다"),
+      new E("-(으)오", "-소"),
+    ];
+    var answers = [
+      ["앉습니다", "앉사옵니다", "앉소"],
+      ["밟습니다", "밟사옵니다", "밟소"],
+      ["맺습니다", "맺사옵니다", "맺소"],
+      ["뒤섞습니다", "뒤섞사옵니다", "뒤섞소"],
+      ["벗습니다", "벗사옵니다", "벗소"],
+      ["옮습니다", "옮사옵니다", "옮소"],
+      ["뵙습니다", "뵙사옵니다", "뵙소"],
+      ["줍니다", "주옵니다", "주오"],
+      ["꿇습니다", "꿇사옵니다", "꿇소"],
+      ["끕니다", "끄옵니다", "끄오"],
+    ];
+    answers.forEach((arr, i) =>
+      arr.forEach((answer, j) => assert.equal(verbs[i]._(endings[j]), answer))
+    );
+  });
 });
 
 describe("ㄷ 불규칙 활용", function () {
@@ -542,13 +548,27 @@ describe("ㄷ 불규칙 활용", function () {
       arr.forEach((answer, j) => assert.equal(verbs[i]._(endings[j]), answer))
     );
   });
+
+  it("음운 조건에 따라 달라지는 어미", function () {
+    var endings = [
+      new E("ㅂ니다", "습니다"),
+      new E("으옵니다", "-사옵니다"),
+      new E("-(으)오", "-소"),
+    ];
+    var answers = [
+      ["걷습니다", "걷사옵니다", "걷소"],
+      ["깨닫습니다", "깨닫사옵니다", "깨닫소"],
+      ["듣습니다", "듣사옵니다", "듣소"],
+      ["싣습니다", "싣사옵니다", "싣소"],
+    ];
+    answers.forEach((arr, i) =>
+      arr.forEach((answer, j) => assert.equal(verbs[i]._(endings[j]), answer))
+    );
+  });
 });
 
 describe("ㅂ 불규칙 활용", function () {
-  var verbs = [
-    new V("돕다", "도와", "도우니"),
-    new V("눕다", "누워"),
-  ];
+  var verbs = [new V("돕다", "도와", "도우니"), new V("눕다", "누워")];
   it("바로 붙는 어미", function () {
     var endings = ["고", "-기", "나", "-니", "다", "-다가", "되", "-자"];
     var answers = [
@@ -614,6 +634,21 @@ describe("ㅂ 불규칙 활용", function () {
         "누우세요",
         "누우면",
       ],
+    ];
+    answers.forEach((arr, i) =>
+      arr.forEach((answer, j) => assert.equal(verbs[i]._(endings[j]), answer))
+    );
+  });
+
+  it("음운 조건에 따라 달라지는 어미", function () {
+    var endings = [
+      new E("ㅂ니다", "습니다"),
+      new E("으옵니다", "-사옵니다"),
+      new E("-(으)오", "-소"),
+    ];
+    var answers = [
+      ["돕습니다", "돕사옵니다", "돕소"],
+      ["눕습니다", "눕사옵니다", "눕소"],
     ];
     answers.forEach((arr, i) =>
       arr.forEach((answer, j) => assert.equal(verbs[i]._(endings[j]), answer))
@@ -753,6 +788,23 @@ describe("ㅅ 불규칙 활용", function () {
         "눈물지으세요",
         "눈물지으면",
       ],
+    ];
+    answers.forEach((arr, i) =>
+      arr.forEach((answer, j) => assert.equal(verbs[i]._(endings[j]), answer))
+    );
+  });
+
+  it("음운 조건에 따라 달라지는 어미", function () {
+    var endings = [
+      new E("ㅂ니다", "습니다"),
+      new E("으옵니다", "-사옵니다"),
+      new E("-(으)오", "-소"),
+    ];
+    var answers = [
+      ["낫습니다", "낫사옵니다", "낫소"],
+      ["가로젓습니다", "가로젓사옵니다", "가로젓소"],
+      ["붓습니다", "붓사옵니다", "붓소"],
+      ["눈물짓습니다", "눈물짓사옵니다", "눈물짓소"],
     ];
     answers.forEach((arr, i) =>
       arr.forEach((answer, j) => assert.equal(verbs[i]._(endings[j]), answer))
@@ -946,13 +998,28 @@ describe("르 불규칙 활용", function () {
       arr.forEach((answer, j) => assert.equal(verbs[i]._(endings[j]), answer))
     );
   });
+
+  it("음운 조건에 따라 달라지는 어미", function () {
+    var endings = [
+      new E("ㅂ니다", "습니다"),
+      new E("으옵니다", "-사옵니다"),
+      new E("-(으)오", "-소"),
+    ];
+    var answers = [
+      ["가릅니다", "가르옵니다", "가르오"],
+      ["벼릅니다", "벼르옵니다", "벼르오"],
+      ["날아오릅니다", "날아오르옵니다", "날아오르오"],
+      ["휘두릅니다", "휘두르옵니다", "휘두르오"],
+      ["무찌릅니다", "무찌르옵니다", "무찌르오"],
+    ];
+    answers.forEach((arr, i) =>
+      arr.forEach((answer, j) => assert.equal(verbs[i]._(endings[j]), answer))
+    );
+  });
 });
 
 describe("러 불규칙 활용", function () {
-  var verbs = [
-    new V("푸르다", "푸르러"),
-    new V("이르다", "이르러", "이르니"),
-  ];
+  var verbs = [new V("푸르다", "푸르러"), new V("이르다", "이르러", "이르니")];
   it("바로 붙는 어미", function () {
     var endings = ["고", "-기", "나", "-니", "다", "-다가", "되", "-자"];
     var answers = [
@@ -1057,6 +1124,21 @@ describe("러 불규칙 활용", function () {
       arr.forEach((answer, j) => assert.equal(verbs[i]._(endings[j]), answer))
     );
   });
+
+  it("음운 조건에 따라 달라지는 어미", function () {
+    var endings = [
+      new E("ㅂ니다", "습니다"),
+      new E("으옵니다", "-사옵니다"),
+      new E("-(으)오", "-소"),
+    ];
+    var answers = [
+      ["푸릅니다", "푸르옵니다", "푸르오"],
+      ["이릅니다", "이르옵니다", "이르오"],
+    ];
+    answers.forEach((arr, i) =>
+      arr.forEach((answer, j) => assert.equal(verbs[i]._(endings[j]), answer))
+    );
+  });
 });
 
 describe("우 불규칙 활용", function () {
@@ -1106,13 +1188,22 @@ describe("우 불규칙 활용", function () {
       arr.forEach((answer, j) => assert.equal(verbs[i]._(endings[j]), answer))
     );
   });
+
+  it("음운 조건에 따라 달라지는 어미", function () {
+    var endings = [
+      new E("ㅂ니다", "습니다"),
+      new E("으옵니다", "-사옵니다"),
+      new E("-(으)오", "-소"),
+    ];
+    var answers = [["풉니다", "푸옵니다", "푸오"]];
+    answers.forEach((arr, i) =>
+      arr.forEach((answer, j) => assert.equal(verbs[i]._(endings[j]), answer))
+    );
+  });
 });
 
 describe("여 불규칙 활용", function () {
-  var verbs = [
-    new V("하다", "해"),
-    new V("일하다", "일하여", "일하니"),
-  ];
+  var verbs = [new V("하다", "해"), new V("일하다", "일하여", "일하니")];
   it("바로 붙는 어미", function () {
     var endings = ["고", "-기", "나", "-니", "다", "-다가", "되", "-자"];
     var answers = [
@@ -1190,13 +1281,25 @@ describe("여 불규칙 활용", function () {
       arr.forEach((answer, j) => assert.equal(verbs[i]._(endings[j]), answer))
     );
   });
+
+  it("음운 조건에 따라 달라지는 어미", function () {
+    var endings = [
+      new E("ㅂ니다", "습니다"),
+      new E("으옵니다", "-사옵니다"),
+      new E("-(으)오", "-소"),
+    ];
+    var answers = [
+      ["합니다", "하옵니다", "하오"],
+      ["일합니다", "일하옵니다", "일하오"],
+    ];
+    answers.forEach((arr, i) =>
+      arr.forEach((answer, j) => assert.equal(verbs[i]._(endings[j]), answer))
+    );
+  });
 });
 
 describe("ㅎ 불규칙 활용", function () {
-  var adjs = [
-    new V("하얗다", "하얘", "하야니"),
-    new V("허옇다", "허예"),
-  ];
+  var adjs = [new V("하얗다", "하얘", "하야니"), new V("허옇다", "허예")];
   it("바로 붙는 어미", function () {
     var endings = ["고", "-기", "나", "-니", "다", "-다가", "되"];
     var answers = [
@@ -1240,7 +1343,17 @@ describe("ㅎ 불규칙 활용", function () {
       "으면",
     ];
     var answers = [
-      ["하얀", "하얄", "하얌", "하얄는지", "하얄까", "하야니", "하야셨다", "하야세요", "하야면"],
+      [
+        "하얀",
+        "하얄",
+        "하얌",
+        "하얄는지",
+        "하얄까",
+        "하야니",
+        "하야셨다",
+        "하야세요",
+        "하야면",
+      ],
       [
         "허연",
         "허열",
@@ -1251,6 +1364,38 @@ describe("ㅎ 불규칙 활용", function () {
         "허여셨다",
         "허여세요",
         "허여면",
+      ],
+    ];
+    answers.forEach((arr, i) =>
+      arr.forEach((answer, j) => assert.equal(adjs[i]._(endings[j]), answer))
+    );
+  });
+
+  it("음운 조건에 따라 달라지는 어미", function () {
+    var endings = [
+      new E("ㅂ니다", "습니다"),
+      new E("으옵니다", "-사옵니다"),
+      new E("-(으)오", "-소"),
+      "ㅂ니다", // in fact both are okay
+      "으옵니다",
+      "-(으)오",
+    ];
+    var answers = [
+      [
+        "하얗습니다",
+        "하얗사옵니다",
+        "하얗소",
+        "하얍니다",
+        "하야옵니다",
+        "하야오",
+      ],
+      [
+        "허옇습니다",
+        "허옇사옵니다",
+        "허옇소",
+        "허엽니다",
+        "허여옵니다",
+        "허여오",
       ],
     ];
     answers.forEach((arr, i) =>
