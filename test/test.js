@@ -1,7 +1,5 @@
 var assert = require("assert");
-var EOMI = require("../dist/index");
-var V = EOMI.V;
-var E = EOMI.E;
+var { V, E } = require("../dist/eomi");
 
 describe("예제", function () {
   it("README.md", function () {

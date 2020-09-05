@@ -37,12 +37,12 @@ const colors = [
 const polite = [
     new Eomi('-ㅂ니다', '-습니다'), // 차례로 받침이 없을 때, 받침이 있을 때
     new Eomi('-(으)ㅂ시다'), // 두 경우를 모두 포괄
-    new Eomi('-어요'),
+    new Eomi('-(아/어)요'),
 ]
 const intimate = [
     new Eomi('ㄴ다', '는다'),
     new Eomi('자'),
-    new Eomi('(아/어)'),
+    new Eomi('어'),
 ]
 
 polite.map(e => new V('뵙다', '뵈어', '뵈니')._(e))
