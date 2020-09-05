@@ -13,7 +13,7 @@ class Trie<T> {
   get(key: string): T[] {
     let node = this.root;
     for (let k of key) {
-      if (!node.children) return []
+      if (!node.children) return [];
       let child = node.children.get(k);
       if (!child) return [];
       node = child;
@@ -45,10 +45,11 @@ class Trie<T> {
     let results: [T[], string][] = [];
     let node = this.root;
     for (let i = 0; i < key.length; i++) {
-      if (!node.children) break
+      if (!node.children) break;
       let child = node.children.get(key[i]);
       if (!child) break;
-      if (child.values && child.values.length) results.push([child.values, key.slice(i + 1)]);
+      if (child.values && child.values.length)
+        results.push([child.values, key.slice(i + 1)]);
       node = child;
     }
     return results;
@@ -82,7 +83,7 @@ function N(x: string) {
 
 type YongeonForm = {
   yongeon: Yongeon;
-  eomiType: EomiType | string;  // hack;
+  eomiType: EomiType | string; // workaround for const enum of another module
   dropRieul?: boolean;
 };
 type EomiRecord = { eomi: Eomi; eomiType: EomiType; dropRieul: boolean };
