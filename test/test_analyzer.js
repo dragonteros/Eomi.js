@@ -56,4 +56,21 @@ describe("분석기 검사", function () {
       assert.deepEqual(analyzer.analyze(s), [[yongeons[1], eomis[0]]])
     );
   });
+
+  it("복사", function () {
+    var yongeons = [new V("가다")];
+    var eomis = [new E("ㅂ니다", "습니다")];
+    var analyzer = new Analyzer(yongeons, eomis);
+
+    var v = new V("가누다");
+    var e = new E("아라");
+    var cloned = analyzer.clone();
+    cloned.addYongeon(v);
+    cloned.addEomi(e);
+
+    assert.deepEqual(analyzer.analyze("가라"), []);
+    assert.deepEqual(cloned.analyze("가라"), [[yongeons[0], e]]);
+    assert.deepEqual(analyzer.analyze("가눕니다"), []);
+    assert.deepEqual(cloned.analyze("가눕니다"), [[v, eomis[0]]]);
+  });
 });

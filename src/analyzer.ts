@@ -5,7 +5,10 @@ import { Yongeon, Eomi, EomiType } from "./conjugation";
 type TrieNode<T> = { values?: T[]; children?: Map<string, TrieNode<T>> };
 function _cloneNode<T>(node: TrieNode<T>): TrieNode<T> {
   if (!node.children) return { values: node.values };
-  let children = new Map<string, TrieNode<T>>(node.children);
+  let children = new Map<string, TrieNode<T>>();
+  for (let [key, value] of node.children.entries()) {
+    children.set(key, _cloneNode(value));
+  }
   return { values: node.values, children };
 }
 
