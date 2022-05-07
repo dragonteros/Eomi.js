@@ -1,6 +1,6 @@
 {
   "name": "eomi-js",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "한국어 용언(동사, 형용사) 활용을 편리하게 구현하는 라이브러리",
   "repository": {
     "type": "git",
@@ -26,15 +26,15 @@
   "homepage": "https://github.com/dragonteros/Eomi.js#readme",
   "devDependencies": {
     "@types/node": "^14.6.0",
-    "microbundle": "^0.12.3",
+    "microbundle": "^0.15.0",
     "mocha": "^8.1.1",
-    "typedoc": "^0.19.0",
+    "typedoc": "^0.22.15",
     "typescript": "^4.0.0"
   },
   "scripts": {
     "build": "microbundle -f cjs,modern,umd",
     "dev": "microbundle -f cjs,modern,umd watch",
-    "test": "tsc; mocha",
+    "test": "tsc && mocha",
     "doc": "typedoc"
   },
   "source": "src/index.ts",

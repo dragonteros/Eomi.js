@@ -3,11 +3,22 @@ import { Yongeon, Eomi, EomiType } from "./conjugation";
 /* Trie */
 
 type TrieNode<T> = { values?: T[]; children?: Map<string, TrieNode<T>> };
+function _cloneNode<T>(node: TrieNode<T>): TrieNode<T> {
+  if (!node.children) return { values: node.values };
+  let children = new Map<string, TrieNode<T>>(node.children);
+  return { values: node.values, children };
+}
 
 class Trie<T> {
   root: TrieNode<T>;
   constructor() {
     this.root = {};
+  }
+
+  clone(): Trie<T> {
+    let other = new Trie<T>();
+    other.root = _cloneNode(this.root);
+    return other;
   }
 
   get(key: string): T[] {
@@ -92,12 +103,24 @@ type EomiRecord = { eomi: Eomi; eomiType: EomiType; dropRieul: boolean };
 class Analyzer {
   yongeons: Trie<YongeonForm>;
   eomis: Map<string, EomiRecord[]>;
-  constructor(yongeons: Yongeon[], eomis: Eomi[]) {
-    this.yongeons = new Trie();
-    yongeons.forEach((yongeon) => this.addYongeon(yongeon));
 
-    this.eomis = new Map();
-    eomis.forEach((eomi) => this.addEomi(eomi));
+  constructor(yongeons: Yongeon[], eomis: Eomi[]);
+  constructor(other: Analyzer);
+  constructor(yongeons: Yongeon[] | Analyzer, eomis: Eomi[] = []) {
+    if (yongeons instanceof Analyzer) {
+      this.yongeons = yongeons.yongeons.clone();
+      this.eomis = new Map(yongeons.eomis);
+    } else {
+      this.yongeons = new Trie();
+      yongeons.forEach((yongeon) => this.addYongeon(yongeon));
+
+      this.eomis = new Map();
+      eomis.forEach((eomi) => this.addEomi(eomi));
+    }
+  }
+
+  clone(): Analyzer {
+    return new Analyzer(this);
   }
 
   addYongeon(yongeon: Yongeon): void {
