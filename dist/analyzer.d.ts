@@ -6,6 +6,7 @@ declare type TrieNode<T> = {
 declare class Trie<T> {
     root: TrieNode<T>;
     constructor();
+    clone(): Trie<T>;
     get(key: string): T[];
     set(key: string, value: T): void;
     /**
@@ -30,6 +31,8 @@ declare class Analyzer {
     yongeons: Trie<YongeonForm>;
     eomis: Map<string, EomiRecord[]>;
     constructor(yongeons: Yongeon[], eomis: Eomi[]);
+    constructor(other: Analyzer);
+    clone(): Analyzer;
     addYongeon(yongeon: Yongeon): void;
     addEomi(eomi: Eomi): void;
     addEomiUnit(key: string, value: EomiRecord): void;
