@@ -168,9 +168,9 @@ class EomiUnit {
     if (eomi[0] === "-") eomi = eomi.slice(1);
 
     const infTest = eomi.match(
-      /^[(]?([아-앟어-엏])(?:[/]([아-앟어-엏]))?[)]?(.*)$/
+      /^[(]([아-앟어-엏])(?:[/]([아-앟어-엏]))?[)](.*)$/
     );
-    const seqTest = eomi.match(/^[(]?([으-읗])[)]?(.*)$/);
+    const seqTest = eomi.match(/^[(]([으-읗])[)](.*)$/);
     const batchimTest = eomi.match(/^([ㄱ-ㅎ].*)$/);
 
     if (infTest !== null) {
