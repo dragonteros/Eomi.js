@@ -171,6 +171,7 @@ class EomiUnit {
       /^[(]?([아-앟어-엏])(?:[/]([아-앟어-엏]))?[)]?(.*)$/
     );
     const seqTest = eomi.match(/^[(]?([으-읗])[)]?(.*)$/);
+    const siotTest = eomi.match(/^([ㅅㅆ].*)$/);
     const batchimTest = eomi.match(/^([ㄱ-ㅎ].*)$/);
 
     if (infTest !== null) {
@@ -182,6 +183,9 @@ class EomiUnit {
       const [, med, rest] = seqTest;
       this.body = getBatchim(med) + rest;
       this.eomiType = EomiType.EU;
+    } else if (siotTest !== null) {
+      this.body = siotTest[1];
+      this.eomiType = EomiType.A_EO;
     } else if (batchimTest !== null) {
       this.body = batchimTest[1];
       this.eomiType = EomiType.EU;
