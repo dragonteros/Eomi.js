@@ -24,8 +24,8 @@ const { Analyzer } = require('eomi-js') // 활용형 분석기
 ```javascript
 const colors = [
     new Yongeon('푸르다', '푸르러', '푸르니'),
-    new Yongeon('붉다', '붉어' /* 세번째 인수는 생략 가능 */),
-    new Yongeon('노랗다', '노래'),
+    new Yongeon('붉다', '붉어', '붉으니'),
+    new Yongeon('노랗다', '노래' /* 세번째 인수는 생략 가능 */),
     new Yongeon('하얗다', '하얘'),
     new Yongeon('검다' /* 두번째 인수도 생략 가능 */),
 ]
