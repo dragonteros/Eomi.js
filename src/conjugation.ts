@@ -93,6 +93,15 @@ class Yongeon {
 
     this.hae = hae || this.recoverHae();
     this.hani = hani ? hani.slice(0, -1) : this.recoverHani();
+    if (
+      this.hani !== "" &&
+      getBatchim(this.hani[this.hani.length - 1]) !== ""
+    ) {
+      throw Error(
+        "Yongeon expects the hani form that does not end in batchim. " +
+          `Did you mean: '${this.hani}으니'?`
+      );
+    }
     this.hamyeon = this.batchim === "ㄹ" ? this.hada : this.hani;
   }
 
